@@ -1,6 +1,5 @@
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { Platform } from '@ionic/angular';
-declare var RecordRTC;
 import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
 
 
@@ -82,7 +81,7 @@ export class RecordRTCComponent implements AfterViewInit {
     const video: HTMLVideoElement = this.video.nativeElement;
     video.muted = mute;
     video.controls = controls;
-    //video.autoplay = !video.autoplay;
+    // video.autoplay = !video.autoplay;
   }
 
   successCallback(stream: MediaStream) {
@@ -145,14 +144,6 @@ export class RecordRTCComponent implements AfterViewInit {
     // handle error here
   }
 
-  /*processVideo(audioVideoWebMURL: any) {
-    const video: HTMLVideoElement = this.video.nativeElement;
-    const recordRTC = this.recordRTC;
-    video.src = audioVideoWebMURL;
-    this.toggleControls();
-    const recordedBlob = recordRTC.getBlob();
-    recordRTC.getDataURL( (dataURL: any) => { });
-  }*/
 
   startRecording() {
     const mediaConstraints: MediaStreamConstraints = {
@@ -181,11 +172,7 @@ export class RecordRTCComponent implements AfterViewInit {
   }
 
   stopRecording() {
-    /*const recordRTC = this.recordRTC;
-    recordRTC.stopRecording(this.processVideo.bind(this));
-    const stream = this.stream;
-    stream.getAudioTracks().forEach(track => track.stop());
-    stream.getVideoTracks().forEach(track => track.stop());*/
+  
     this.mediaRecorder.stop();
     const stream = this.stream;
     stream.getTracks().forEach(track => track.stop());
@@ -193,7 +180,6 @@ export class RecordRTCComponent implements AfterViewInit {
   }
 
   public download() {
-    /*this.recordRTC.save('video.webm');*/
     const recordedBlob = new Blob(this.lastStoppedRecord, { type: 'video/webm' });
     console.log(this.lastStoppedRecord);
     console.log(recordedBlob);
