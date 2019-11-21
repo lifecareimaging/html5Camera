@@ -1,5 +1,8 @@
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { Platform } from '@ionic/angular';
+//const RecordRTC = require('recordrtc/RecordRTC.min');
+
+declare var RecordRTC;
 import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
 
 
@@ -81,7 +84,7 @@ export class RecordRTCComponent implements AfterViewInit {
     const video: HTMLVideoElement = this.video.nativeElement;
     video.muted = mute;
     video.controls = controls;
-    // video.autoplay = !video.autoplay;
+    //video.autoplay = !video.autoplay;
   }
 
   successCallback(stream: MediaStream) {
@@ -94,7 +97,22 @@ export class RecordRTCComponent implements AfterViewInit {
     };
     this.stream = stream;
 
+
+    this.recordRTC = RecordRTC(stream, options);
+    this.recordRTC.startRecording();
+    const video: HTMLVideoElement = this.video.nativeElement;
+
     if (this.html5MediaSupportFull) {
+      video.srcObject = stream;
+    } else if (window.webkitURL) {
+      video.src = window.webkitURL.createObjectURL(stream);
+    }
+
+
+    //video.src = window.URL.createObjectURL(stream);
+    
+
+    /*if (this.html5MediaSupportFull) {
       this.video.nativeElement.srcObject = stream;
     } else if (window.webkitURL) {
       this.video.nativeElement.src = window.webkitURL.createObjectURL(stream);
@@ -116,7 +134,7 @@ export class RecordRTCComponent implements AfterViewInit {
       this.chunks = [];
 
 
-      if (this.html5MediaSupportFull) {
+      if (this.html5MediaSupportFull) { 
         const src = URL.createObjectURL(blob);
         this.video.nativeElement.src = src;
       } else if (window.webkitURL) {
@@ -126,15 +144,12 @@ export class RecordRTCComponent implements AfterViewInit {
       this.toggleControls(false, true);
 
     };
-    this.mediaRecorder.ondataavailable = this.onDataAvailable.bind(this);
+    this.mediaRecorder.ondataavailable = this.onDataAvailable.bind(this);*/
 
 
   }
 
 
-  onDataAvailable(e: any) {
-    this.chunks.push(e.data);
-  }
 
   errorCallback(error: any) {
     console.log('Error happened:');
@@ -144,6 +159,14 @@ export class RecordRTCComponent implements AfterViewInit {
     // handle error here
   }
 
+  processVideo(audioVideoWebMURL: any) {
+    const video: HTMLVideoElement = this.video.nativeElement;
+    const recordRTC = this.recordRTC;
+    video.src = audioVideoWebMURL;
+    this.toggleControls(false, true);
+    const recordedBlob = recordRTC.getBlob();
+    recordRTC.getDataURL( (dataURL: any) => { });
+  }
 
   startRecording() {
     const mediaConstraints: MediaStreamConstraints = {
@@ -172,23 +195,28 @@ export class RecordRTCComponent implements AfterViewInit {
   }
 
   stopRecording() {
-  
-    this.mediaRecorder.stop();
+    const recordRTC = this.recordRTC;
+    recordRTC.stopRecording(this.processVideo.bind(this));
     const stream = this.stream;
-    stream.getTracks().forEach(track => track.stop());
+    stream.getAudioTracks().forEach(track => track.stop());
+    stream.getVideoTracks().forEach(track => track.stop());
+   /* this.mediaRecorder.stop();
+    const stream = this.stream;
+    stream.getTracks().forEach(track => track.stop());*/
 
   }
 
   public download() {
-    const recordedBlob = new Blob(this.lastStoppedRecord, { type: 'video/webm' });
+    this.recordRTC.save('video.webm');
+    /*const recordedBlob = new Blob(this.lastStoppedRecord, { type: 'video/webm' });
     console.log(this.lastStoppedRecord);
     console.log(recordedBlob);
-    this.invokeSaveAsDialog(recordedBlob, 'video.webm');
+    this.invokeSaveAsDialog(recordedBlob, 'video.webm');*/
   }
 
 
 
-  invokeSaveAsDialog(file, fileName) {
+  /*invokeSaveAsDialog(file, fileName) {
     if (!file) {
         throw 'Blob object is required.';
     }
@@ -234,7 +262,7 @@ export class RecordRTCComponent implements AfterViewInit {
     }
 
     URL.revokeObjectURL(hyperlink.href);
-}
+}*/
 
 
 }
