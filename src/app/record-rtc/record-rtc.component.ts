@@ -81,6 +81,8 @@ export class RecordRTCComponent implements AfterViewInit {
 
     });
   });
+    console.log(this.platform.platforms());
+
   }
 
   toggleControls(mute: boolean, controls: boolean) {
@@ -93,7 +95,7 @@ export class RecordRTCComponent implements AfterViewInit {
   successCallback(stream: MediaStream) {
 
     const options = {
-      mimeType: 'video/webm\;codecs=h264', // or video/webm\;codecs=h264 or video/webm\;codecs=vp9
+      mimeType: 'video/webm', // or video/webm\;codecs=h264 or video/webm\;codecs=vp9
       //audioBitsPerSecond: 128000,
       //videoBitsPerSecond: 128000,
       //bitsPerSecond: 128000 // if this line is provided, skip above two
@@ -101,7 +103,7 @@ export class RecordRTCComponent implements AfterViewInit {
     };
     this.stream = stream;
 
-
+    console.log('Recorder type:' + options.recorderType);
 
     const video: HTMLVideoElement = this.video.nativeElement;
 
@@ -109,15 +111,11 @@ export class RecordRTCComponent implements AfterViewInit {
       video.srcObject = stream;
       video.play();
     } else if (window.webkitURL) {
-      video.src = window.webkitURL.createObjectURL(stream);
+      video.src = URL.createObjectURL(stream);
     }
 
     this.recordRTC = RecordRTC(stream, options);
     this.recordRTC.startRecording();
-
-
-    
-
 
   }
 
@@ -147,14 +145,7 @@ export class RecordRTCComponent implements AfterViewInit {
   }
 
 
-  public convertFileSrc(fileUrl: string) {
-    if (!this.platform.is("cordova")) {
-        return this.sanitizer.bypassSecurityTrustUrl(fileUrl);
-    }
-    return this.sanitizer.bypassSecurityTrustUrl(
-        this.webView.convertFileSrc(fileUrl)
-    );
-}
+  
 
   startRecording() {
     const mediaConstraints: MediaStreamConstraints = {
@@ -196,12 +187,6 @@ export class RecordRTCComponent implements AfterViewInit {
 
   public download() {
     this.recordRTC.save('video.webm');
-    
   }
-
-
-
-  
-
 
 }
