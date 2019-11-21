@@ -1,5 +1,7 @@
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { Platform } from '@ionic/angular';
+import { DomSanitizer } from '@angular/platform-browser';
+import { WebView } from '@ionic-native/ionic-webview/ngx';
 //const RecordRTC = require('recordrtc/RecordRTC.min');
 
 declare var RecordRTC;
@@ -25,7 +27,8 @@ export class RecordRTCComponent implements AfterViewInit {
   @ViewChild('video', {static: false}) video;
   private html5MediaSupportFull = false;
 
-  constructor(private platform: Platform, private androidPermissions: AndroidPermissions) {
+  constructor(private platform: Platform, private androidPermissions: AndroidPermissions, private webView: WebView,
+    private sanitizer: DomSanitizer) {
     // Do stuff
   }
 
@@ -98,15 +101,18 @@ export class RecordRTCComponent implements AfterViewInit {
     this.stream = stream;
 
 
-    this.recordRTC = RecordRTC(stream, options);
-    this.recordRTC.startRecording();
+
     const video: HTMLVideoElement = this.video.nativeElement;
 
     if (this.html5MediaSupportFull) {
       video.srcObject = stream;
+      video.play();
     } else if (window.webkitURL) {
       video.src = window.webkitURL.createObjectURL(stream);
     }
+
+    this.recordRTC = RecordRTC(stream, options);
+    this.recordRTC.startRecording();
 
 
     //video.src = window.URL.createObjectURL(stream);
@@ -161,12 +167,28 @@ export class RecordRTCComponent implements AfterViewInit {
 
   processVideo(audioVideoWebMURL: any) {
     const video: HTMLVideoElement = this.video.nativeElement;
-    const recordRTC = this.recordRTC;
-    video.src = audioVideoWebMURL;
+    video.src = video.srcObject = null;
+    //video.src =  this.convertFileSrc(audioVideoWebMURL);
+    console.log(audioVideoWebMURL);
+    if (this.html5MediaSupportFull) {
+      video.src = URL.createObjectURL(this.recordRTC.getBlob());
+    } else {
+      video.src =  audioVideoWebMURL;
+    }
     this.toggleControls(false, true);
-    const recordedBlob = recordRTC.getBlob();
-    recordRTC.getDataURL( (dataURL: any) => { });
+    //const recordedBlob = recordRTC.getBlob();
+    //recordRTC.getDataURL( (dataURL: any) => { });
   }
+
+
+  public convertFileSrc(fileUrl: string) {
+    if (!this.platform.is("cordova")) {
+        return this.sanitizer.bypassSecurityTrustUrl(fileUrl);
+    }
+    return this.sanitizer.bypassSecurityTrustUrl(
+        this.webView.convertFileSrc(fileUrl)
+    );
+}
 
   startRecording() {
     const mediaConstraints: MediaStreamConstraints = {
